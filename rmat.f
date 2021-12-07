@@ -1,11 +1,12 @@
       module rmat
       implicit none
+      real*8,dimension(:),allocatable :: nfc,ngc,nfcp,ngcp ! used for coul90
       contains
 
 
-      subroutine Inhomo_Rmatrix_method()
+      subroutine scatt2b()
       use channels
-      use lagrange_mesh_source
+      use lagrange_mesh_single_channel
       use mesh
       use coulfunc
       use input
@@ -22,50 +23,35 @@
       complex*16 :: smat
       integer :: ir
       integer :: ie
+      real*8,dimension(0:lmax) :: cph  !Coulomb phase-shift
 
 
       !initial Lagrange mesh
-      call rmat_ini(nr,rmax)
-      allocate(fc(0:lmax),gc(0:lmax),dfc(0:lmax),dgc(0:lmax))
-
-
-      ! add loop 
-C     do ie=1, 1000
-C     ecm=ecm+0.001
-C     k=sqrt(2.0_dpreal*mu*ecm)/hbarc
+      call initial_lagrange_func(rmax)
+      call T_and_Bloch(mu)
+      allocate(nfc(0:lmax),ngc(0:lmax),nfcp(0:lmax),ngcp(0:lmax))
 
       ! compute the boundary conditions
       eta=za*zb*e2*mu/hbarc/hbarc/k
       kr=k*rmax
-      call coul90(kr,eta,zero,lmax,fc,gc,dfc,dgc,0,ifail)
+      call coul90(kr,eta,zero,lmax,nfc,ngc,nfcp,ngcp,0,ifail)
+      if (ifail/=0) then
+      write(*,*) 'coul90: ifail=',ifail; stop
+      endif
 
-      ! allocate source term
-      if (allocated(rho)) deallocate(rho)
-        allocate(rho(1:nr))
-      if (readrho) call read_rho()
-
-      hm=hbarc**2/(2.*mu)
-
-
+      ! compute the Coulomb phase-shift
+      call coulph(eta,cph,lmax)
 
       do nch=1, alpha2b%nchmax
         l=alpha2b%l(nch)
         s=alpha2b%s(nch)
         j=alpha2b%j(nch)
         ls=0.5_dpreal*(j*(j+1)-l*(l+1)-s*(s+1))
-        call potr(za*zb,ls)
-        if (.not. readrho) then 
-          write(31,*) "&l=",l,"s=",s,"j=",j
-          do ir=1, nr 
-            rho(ir)=v(ir)*sin(rr(ir))
-            
-            write(31,*) rr(ir), real(rho(ir)), aimag(rho(ir))
-          end do 
-        
-        end if 
-        
-        
-        call rmat_inho(nr,rmax,v,rho,ecm,eta,hm,l,smat,wf)
+         call potr(za*zb,ls)
+
+         call R_matrix(l,mu,ecm,v,cph(l),ngc(l),ngcp(l),nfc(l),nfcp(l),smat,wf)
+
+C        call rmat_inho(nr,rmax,v,ecm,eta,hm,l,smat,wf)
 
         write(*,100) l,s,j,real(smat),aimag(smat)
         write(32,101)l,s,j
@@ -77,19 +63,18 @@ C     k=sqrt(2.0_dpreal*mu*ecm)/hbarc
            write(52,*) rr(ir), real(wf(ir))
         end do
 
-C     write(99,*) rmax, abs(smat)
-      
+
 
       end do
-      
-      
-      deallocate(fc,gc,dfc,dgc)
-     
+
+
+      deallocate(nfc,ngc,nfcp,ngcp)
+
 
 100   format('l=',I3,' s=',f3.1, ' j=', f3.1, ' s-mat=(',2f10.6,')')
 101   format('&l=',I3,' s=',f3.1, ' j=', f3.1)
 
-C     end do   ! add loop 
+C     end do   ! add loop
 
       end subroutine
 

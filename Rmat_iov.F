@@ -15,13 +15,13 @@ C     do nr=15,80,5
 C     write(99,*) "&nr=",nr
 C     write(*,*) "&nr=",nr
 C     do ir=100, 400, 1
-      rmax=ir*0.1_dpreal
+C      rmax=ir*0.1_dpreal
       if (allocated(rr)) deallocate(rr, rrw)
       allocate(rr(1:nr),rrw(1:nr))
       call gauleg(nr,0.0_dpreal,rmax,rr,rrw)
 
       call cpu_time(t1)
-      call Inhomo_Rmatrix_method()
+      call scatt2b()
       call cpu_time(t2)
       tr=t2-t1
 
