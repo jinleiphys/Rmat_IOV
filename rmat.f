@@ -49,7 +49,8 @@
         ls=0.5_dpreal*(j*(j+1)-l*(l+1)-s*(s+1))
          call potr(za*zb,ls)
 
-         call R_matrix(l,mu,ecm,v,cph(l),ngc(l),ngcp(l),nfc(l),nfcp(l),smat,wf)
+C         call R_matrix(l,mu,ecm,v,cph(l),ngc(l),ngcp(l),nfc(l),nfcp(l),smat,wf)
+         call R_matrix_iov(l,mu,ecm,v,cph(l),ngc(l),ngcp(l),nfc(l),nfcp(l),smat,wf)
 
 C        call rmat_inho(nr,rmax,v,ecm,eta,hm,l,smat,wf)
 

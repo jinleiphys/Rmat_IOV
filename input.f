@@ -22,14 +22,14 @@ C     integer :: method ! method=1 lagrange mesh method, /=1 numerov method
 
 
 
-      namelist /global/ Elab,hcm,rmax,lmin,lmax,nr
+      namelist /global/ Elab,hcm,rmax,lmin,lmax,nr,maxiter
       namelist /systems/ massa, massb, za,zb,ja,jb
 
       namelist /potential/ ptype,a1,a2,rc,uv,av,rv,uw,aw,rw,
      +                     vsov,rsov,asov,vsow,rsow,asow,vd,avd,rvd,wd,awd,rwd
 
 
-      hcm=0.05;rmax=40;lmin=0;lmax=0;nr=60
+      hcm=0.05;rmax=40;lmin=0;lmax=0;nr=60;maxiter=20
       read(5,nml=global)
       irmax=nint(rmax/hcm)
 
