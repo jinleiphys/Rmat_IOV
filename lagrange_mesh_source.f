@@ -300,8 +300,10 @@ C       X_vector= B_vector
       eta_bar1=>eta_bar(1:nr,1)
       call COMDOTPRODUCT(eta_bar1,eta_bar1,dotprot)
       abs_eta_tilde=abs(dotprot)
-      eta_bar1=eta_bar1/sqrt(abs_eta_tilde)
+      abs_eta_tilde=sqrt(abs_eta_tilde)
+      eta_bar1=eta_bar1/abs_eta_tilde
       etapsi=0.0_dpreal
+
       do i=1, maxiter
         eta_bar1=>eta_bar(1:nr,i)
         call COMDOTPRODUCT(eta_bar1,B_vector,etapsi(i))
@@ -314,10 +316,23 @@ C       X_vector= B_vector
           call COMDOTPRODUCT(eta_bar1,eta1,A_matrix(j,i))
           eta_tilde=eta_tilde-A_matrix(j,i)* eta_bar1
         end do
+
+
         call COMDOTPRODUCT(eta_tilde,eta_tilde,dotprot)
         abs_eta_tilde=abs(dotprot)
+        abs_eta_tilde=sqrt(abs_eta_tilde)
         eta_bar1=>eta_bar(1:nr,i+1)
         eta_bar1=eta_tilde/abs_eta_tilde
+
+
+
+        do j=1,nr
+           write(102,*)mesh_rr(j),abs(eta_bar1(j))
+        end do
+        write(102,*)"&"
+C         stop
+
+
         !!!!store value of abs_eta_tilde
         if (i/=1) A_matrix(i,i-1) = abs_eta_tilde1
         abs_eta_tilde1=abs_eta_tilde
@@ -331,10 +346,16 @@ C       X_vector= B_vector
         end if
         X_vector=matmul(eta_bar,af)
         call COMDOTPRODUCT(X_vector,X_vector,mod)
-        write(*,*) "mod=",mod
+C        write(*,*) "i=",i,"mod=",mod
+
+        do j=1,nr
+           write(103,*)mesh_rr(j),abs(eta_bar(j,i))
+        end do
+        write(103,*)"&"
+C        stop
 
 
-        if (i>1) write(*,*) "abs(abs(mod)-abs(mod1))=",abs(abs(mod)-abs(mod1))
+C        if (i>1) write(*,*) "abs(abs(mod)-abs(mod1))=",abs(abs(mod)-abs(mod1))
 C        if (i>1 .and. abs(abs(mod)-abs(mod1)) < 1e-6) exit
 
         mod1=mod
