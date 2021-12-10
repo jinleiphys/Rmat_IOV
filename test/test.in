@@ -1,4 +1,4 @@
-&global Elab=25.5 hcm=0.05 rmax=60 lmin=0 lmax=0 nr=180  /
+&global Elab=25.5 hcm=0.05 rmax=60 lmin=0 lmax=10 nr=180  maxiter=100 /
 
 
 &systems massa=2  za=1  ja=0

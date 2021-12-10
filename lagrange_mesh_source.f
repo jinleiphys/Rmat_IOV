@@ -194,6 +194,14 @@ c***********************************************************************
        If(INFO/=0) stop "error in calling ZGESV"
 
 
+       do ir=1,nr
+         write(201,*) mesh_rr(ir),abs(X_vector(ir))
+
+       end do
+
+       write(201,*) "&"
+
+
        ! normalize factor
        N = hbarc**2 / (2.0_dpreal * mu * rmax_rmatrix)
 
@@ -218,7 +226,7 @@ C      Smatrix= CONJG(Zmatrix) / Zmatrix
        if (aimag(Smatrix)<0) delta=-delta+pi
        DELTA=DELTA*180.0d0/pi
 
-       write(*,*) "l=",l,"Smatrix=", Smatrix
+C       write(*,*) "l=",l,"Smatrix=", Smatrix
 
 
        ! compute the scattering wave function  ! still testing
@@ -250,11 +258,11 @@ c***********************************************************************
        real*8 :: gc,gcp,fc,fcp
        complex*16,dimension(1:nr) :: vpot
        complex*16,dimension(1:nr,1:nr) :: C_minus_E
-       complex*16,dimension(1:nr) ::  B_vector,X_vector,X_vector_store
+       complex*16,dimension(1:nr) ::  B_vector,X_vector,X_vector_store,xx
        complex*16,dimension(1:maxiter,1:maxiter) :: A_matrix
        complex*16,dimension(1:maxiter,1:maxiter) :: A1_matrix
-       complex*16,target,dimension(1:nr,1:maxiter) :: eta_bar
-       complex*16,dimension(1:nr) :: eta1, eta_tilde
+       complex*16,target,dimension(1:nr,1:maxiter+1) :: eta_bar
+       complex*16,dimension(1:nr) :: eta1, eta_tilde,f0
        complex*16,dimension(:),pointer :: eta_bar1
        integer :: ir,INFO,NRHS
        complex*16,dimension(1:maxiter) :: etapsi,af
@@ -296,7 +304,8 @@ C       X_vector= B_vector
 
 
 ! begin IOV method
-      eta_bar(:,1)=B_vector
+      eta_bar(:,1)=B_vector-matmul(C_minus_E,B_vector)
+C      eta_bar(:,1)=1.0_dpreal
       eta_bar1=>eta_bar(1:nr,1)
       call COMDOTPRODUCT(eta_bar1,eta_bar1,dotprot)
       abs_eta_tilde=abs(dotprot)
@@ -309,13 +318,23 @@ C       X_vector= B_vector
         call COMDOTPRODUCT(eta_bar1,B_vector,etapsi(i))
         ! calculate eta_{i+1}
         eta1=matmul(C_minus_E,eta_bar1)
+
+        do j=1,nr
+           write(102,*)mesh_rr(j),abs(eta1(j))
+        end do
+        write(102,*)"&"
+
+
         !Orthogonalize eta_{i+1} => eta_tilde
         eta_tilde=eta1
+C        f0=0.0_dpreal
         do j=1, i
           eta_bar1=>eta_bar(1:nr,j)
           call COMDOTPRODUCT(eta_bar1,eta1,A_matrix(j,i))
+C          f0=f0+A_matrix(j,i)* eta_bar1
           eta_tilde=eta_tilde-A_matrix(j,i)* eta_bar1
         end do
+C        eta_tilde=eta1-f0
 
 
         call COMDOTPRODUCT(eta_tilde,eta_tilde,dotprot)
@@ -323,15 +342,6 @@ C       X_vector= B_vector
         abs_eta_tilde=sqrt(abs_eta_tilde)
         eta_bar1=>eta_bar(1:nr,i+1)
         eta_bar1=eta_tilde/abs_eta_tilde
-
-
-
-        do j=1,nr
-           write(102,*)mesh_rr(j),abs(eta_bar1(j))
-        end do
-        write(102,*)"&"
-C         stop
-
 
         !!!!store value of abs_eta_tilde
         if (i/=1) A_matrix(i,i-1) = abs_eta_tilde1
@@ -342,28 +352,30 @@ C         stop
          af=etapsi ! a coefficient
          call ZGESV(i,NRHS,A1_matrix,maxiter,IPIV,af,maxiter,INFO )
          If(INFO/=0) stop "error in calling ZGESV"
-
+         X_vector=matmul(eta_bar,af)
+         call COMDOTPRODUCT(X_vector,X_vector,mod)
         end if
-        X_vector=matmul(eta_bar,af)
-        call COMDOTPRODUCT(X_vector,X_vector,mod)
+
 C        write(*,*) "i=",i,"mod=",mod
 
-        do j=1,nr
-           write(103,*)mesh_rr(j),abs(eta_bar(j,i))
-        end do
-        write(103,*)"&"
+C        do j=1,nr
+C           write(103,*)mesh_rr(j),abs(eta_bar(j,i))
+C        end do
+C        write(103,*)"&"
 C        stop
-
+C         write(*,*) "abs(mod)=",abs(mod), "abs(mod1)=",abs(mod1)
 
 C        if (i>1) write(*,*) "abs(abs(mod)-abs(mod1))=",abs(abs(mod)-abs(mod1))
-C        if (i>1 .and. abs(abs(mod)-abs(mod1)) < 1e-6) exit
+        if (i/=1 .and. abs(abs(mod)-abs(mod1)) < 1e-9) exit
 
         mod1=mod
        end do
+        write(*,*) "i=",i
 
-
+C        xx=X_vector
 
 ! finish IOV method
+
 
 
        ! normalize factor
@@ -390,7 +402,7 @@ C      Smatrix= CONJG(Zmatrix) / Zmatrix
        if (aimag(Smatrix)<0) delta=-delta+pi
        DELTA=DELTA*180.0d0/pi
 
-       write(*,*) "l=",l,"Smatrix=", Smatrix
+C       write(*,*) "l=",l,"Smatrix=", Smatrix
 
 
        ! compute the scattering wave function  ! still testing
@@ -406,7 +418,7 @@ C      Smatrix= CONJG(Zmatrix) / Zmatrix
        write(98,*) "&"
 
 
-       stop
+C       stop
 
 
        end subroutine

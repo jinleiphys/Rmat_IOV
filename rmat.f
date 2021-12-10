@@ -24,6 +24,7 @@
       integer :: ir
       integer :: ie
       real*8,dimension(0:lmax) :: cph  !Coulomb phase-shift
+      complex*16,dimension(1:nr) :: X_vector
 
 
       !initial Lagrange mesh
@@ -49,8 +50,10 @@
         ls=0.5_dpreal*(j*(j+1)-l*(l+1)-s*(s+1))
          call potr(za*zb,ls)
 
-C         call R_matrix(l,mu,ecm,v,cph(l),ngc(l),ngcp(l),nfc(l),nfcp(l),smat,wf)
+
+C         if(nch==1)  call R_matrix(l,mu,ecm,v,cph(l),ngc(l),ngcp(l),nfc(l),nfcp(l),smat,wf,X_vector)
          call R_matrix_iov(l,mu,ecm,v,cph(l),ngc(l),ngcp(l),nfc(l),nfcp(l),smat,wf)
+
 
 C        call rmat_inho(nr,rmax,v,ecm,eta,hm,l,smat,wf)
 
@@ -72,8 +75,8 @@ C        call rmat_inho(nr,rmax,v,ecm,eta,hm,l,smat,wf)
       deallocate(nfc,ngc,nfcp,ngcp)
 
 
-100   format('l=',I3,' s=',f3.1, ' j=', f3.1, ' s-mat=(',2f10.6,')')
-101   format('&l=',I3,' s=',f3.1, ' j=', f3.1)
+100   format('l=',I3,' s=',f3.1, ' j=', f7.1, ' s-mat=(',2f10.6,')')
+101   format('&l=',I3,' s=',f3.1, ' j=', f5.1)
 
 C     end do   ! add loop
 

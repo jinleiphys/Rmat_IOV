@@ -15,7 +15,7 @@ COMPDATE :=$(shell date)
 #LIB = -L ../lapack-3.5.0 -lrefblas -llapack
 FC = gfortran
 F90 = gfortran
-FFLAGS = -O5 -Wtabs   -ffixed-line-length-0
+FFLAGS = -O3 -Wtabs  -g -ffixed-line-length-0
 
 .SUFFIXES: .F90 .f90 .f95
 
